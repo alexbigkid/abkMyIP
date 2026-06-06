@@ -7,7 +7,7 @@ class MainSanityTest {
 
     @Test
     fun `main function exists`() {
-        val fn: () -> Unit = ::main
+        val fn: (Array<String>) -> Unit = ::main
         assertNotNull(fn)
     }
 }

@@ -1,6 +1,7 @@
 package com.abk.myip.web
 
 import com.abk.myip.AbkMyIp
+import com.abk.myip.BuildConfig
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
@@ -10,6 +11,7 @@ import org.w3c.dom.HTMLImageElement
 
 fun main() {
     window.onload = {
+        setText("version", BuildConfig.APP_VERSION)
         MainScope().launch {
             val app = AbkMyIp()
             val info = app.getMyIpInfo()

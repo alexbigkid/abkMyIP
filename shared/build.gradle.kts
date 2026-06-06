@@ -4,6 +4,33 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val appVersion = libs.versions.app.get()
+val generatedConfigDir = layout.buildDirectory.dir("generated/source/buildConfig/commonMain/kotlin")
+
+val generateBuildConfig = tasks.register("generateBuildConfig") {
+    val outFile = generatedConfigDir.get().file("com/abk/myip/BuildConfig.kt").asFile
+    val versionString = appVersion
+    inputs.property("version", versionString)
+    outputs.file(outFile)
+    doLast {
+        outFile.parentFile.mkdirs()
+        outFile.writeText(
+            """
+            |package com.abk.myip
+            |
+            |object BuildConfig {
+            |    const val APP_VERSION = "$versionString"
+            |}
+            |
+            """.trimMargin()
+        )
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+    dependsOn(generateBuildConfig)
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -48,13 +75,16 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.kermit)
+        commonMain {
+            kotlin.srcDir(generatedConfigDir)
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.kermit)
+            }
         }
         commonTest {
             kotlin.srcDir(rootProject.file("tests/shared/commonTest/kotlin"))

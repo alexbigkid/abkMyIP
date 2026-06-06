@@ -12,8 +12,10 @@ android {
         applicationId = "com.abk.myip.android"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionName = libs.versions.app.get()
+        versionCode = libs.versions.app.get().split(".").let { (major, minor, patch) ->
+            major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt()
+        }
     }
 
     buildFeatures {
