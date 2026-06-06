@@ -22,6 +22,42 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+*.hprof
 
 # Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
 .kotlin/
+
+# Gradle
+build/
+.gradle/
+!gradle-wrapper.jar
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.fleet/
+.cursor/
+
+# Xcode — Xcode projects/workspaces are generated locally (see apps/iosApp/README.md, apps/macosApp/README.md)
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Kotlin/JS & web
+node_modules/
+package-lock.json
+yarn.lock
+kotlin-js-store/
+
+# OS
+.DS_Store
+Thumbs.db
+._*
+.AppleDouble
+.LSOverride
