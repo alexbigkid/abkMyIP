@@ -27,6 +27,7 @@ help:
     @echo "  build-ios                       Build iOS shared framework (device + simulator arm64)"
     @echo "  build-macos                     Build macOS shared framework (arm64)"
     @echo "  build-macos-app                 Build the full macOS .app via xcodebuild"
+    @echo "  build-ios-app                   Build the full iOS .app for the simulator via xcodebuild"
     @echo "  build-all                       Build shared + Linux + web + Android (host-buildable set)"
     @echo ""
     @echo "Compile-only checks (no linking — fast feedback):"
@@ -43,6 +44,9 @@ help:
     @echo "  run-web                         Run web dev server with auto-reload"
     @echo "  run-android                     Install + launch Android app on device/emulator"
     @echo "  run-macos                       Build + launch the macOS app"
+    @echo "  run-ios                         Build + launch the iOS app on iPhone 17 Pro simulator"
+    @echo "  run-ipad-pro                    Build + launch the iOS app on iPad Pro 11-inch (M5) simulator"
+    @echo "  run-ipad-mini                   Build + launch the iOS app on iPad mini (A17 Pro) simulator"
     @echo "  open-macos                      Open the macOS Xcode project"
     @echo ""
     @echo "Tests:"
@@ -148,6 +152,24 @@ build-macos-app: build-macos
     echo "✅ macOS app: apps/macosApp/build/Build/Products/Debug/macosApp.app"
 
 # -----------------------------------------------------------------------------
+# Builds the full iOS .app for the simulator via xcodebuild. Requires the Xcode project to exist (see apps/iosApp/README.md).
+build-ios-app: build-ios
+    #!/usr/bin/env sh
+    PROJ="apps/iosApp/iosApp.xcodeproj"
+    if [ ! -d "$PROJ" ]; then
+        echo "❌ Xcode project not found at $PROJ"
+        echo "📖 See apps/iosApp/README.md for one-time setup"
+        exit 1
+    fi
+    xcodebuild -project "$PROJ" \
+               -scheme iosApp \
+               -configuration Debug \
+               -destination "platform=iOS Simulator,name=iPhone 17 Pro" \
+               -derivedDataPath apps/iosApp/build \
+               build
+    echo "✅ iOS app: apps/iosApp/build/Build/Products/Debug-iphonesimulator/iosApp.app"
+
+# -----------------------------------------------------------------------------
 # Builds everything that can build on this host.
 build-all: build build-linux build-web build-android
     @echo "✅ Built shared + Linux + Web + Android"
@@ -222,6 +244,57 @@ run-macos: build-macos-app
     fi
     open "$APP"
     echo "🚀 Launched: $APP"
+
+# -----------------------------------------------------------------------------
+# Builds and launches the iOS app on the iPhone 17 Pro simulator.
+run-ios: build-ios-app
+    #!/usr/bin/env sh
+    DEVICE="iPhone 17 Pro"
+    APP="apps/iosApp/build/Build/Products/Debug-iphonesimulator/iosApp.app"
+    if [ ! -d "$APP" ]; then
+        echo "❌ Built app not found at $APP"
+        exit 1
+    fi
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
+    xcrun simctl boot "$DEVICE" 2>/dev/null || true
+    open -a Simulator
+    xcrun simctl install "$DEVICE" "$APP"
+    xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
+    echo "🚀 Launched: $APP on $DEVICE"
+
+# -----------------------------------------------------------------------------
+# Builds and launches the iOS app on the iPad Pro 11-inch (M5) simulator.
+run-ipad-pro: build-ios-app
+    #!/usr/bin/env sh
+    DEVICE="iPad Pro 11-inch (M5)"
+    APP="apps/iosApp/build/Build/Products/Debug-iphonesimulator/iosApp.app"
+    if [ ! -d "$APP" ]; then
+        echo "❌ Built app not found at $APP"
+        exit 1
+    fi
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
+    xcrun simctl boot "$DEVICE" 2>/dev/null || true
+    open -a Simulator
+    xcrun simctl install "$DEVICE" "$APP"
+    xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
+    echo "🚀 Launched: $APP on $DEVICE"
+
+# -----------------------------------------------------------------------------
+# Builds and launches the iOS app on the iPad mini (A17 Pro) simulator.
+run-ipad-mini: build-ios-app
+    #!/usr/bin/env sh
+    DEVICE="iPad mini (A17 Pro)"
+    APP="apps/iosApp/build/Build/Products/Debug-iphonesimulator/iosApp.app"
+    if [ ! -d "$APP" ]; then
+        echo "❌ Built app not found at $APP"
+        exit 1
+    fi
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
+    xcrun simctl boot "$DEVICE" 2>/dev/null || true
+    open -a Simulator
+    xcrun simctl install "$DEVICE" "$APP"
+    xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
+    echo "🚀 Launched: $APP on $DEVICE"
 
 # -----------------------------------------------------------------------------
 # Opens the macOS Xcode project in Xcode (or guides setup if it does not exist).
