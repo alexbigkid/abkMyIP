@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.abk.myip.android"
+    namespace = "com.abkcompany.myip.androidApp"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.abk.myip.android"
+        applicationId = "com.abkcompany.myip.androidApp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionName = libs.versions.app.get()
@@ -48,5 +48,8 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.coil.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.osmdroid.android)
+
+    testImplementation(kotlin("test"))
 }

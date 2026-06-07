@@ -83,7 +83,7 @@ Linux and Windows ship as **CLI binaries** because Kotlin/Native has no producti
 | Target | Required tools |
 |---|---|
 | `:shared:jvmTest`, `:apps:webApp`, `:apps:linuxApp`, `:apps:windowsApp` | JDK 17+ only (the Gradle wrapper provides Kotlin/Native and downloads sysroots) |
-| `:apps:androidApp` | Android SDK with `ANDROID_HOME` set, `compileSdk = 35` |
+| `:apps:androidApp` | Android SDK with `ANDROID_HOME` set, `compileSdk = 36` |
 | iOS / macOS native + iOS sim tests | **Full Xcode** (not just Command Line Tools) — Kotlin/Native invokes `xcrun xcodebuild` |
 
 ### Optional: `IPINFO_TOKEN`

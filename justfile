@@ -228,10 +228,30 @@ run-web:
     ./gradlew :apps:webApp:jsBrowserDevelopmentRun --continuous
 
 # -----------------------------------------------------------------------------
-# Installs and launches the Android app on a connected device or emulator.
+# Installs and launches the Android app on a connected device or emulator. Boots the Pixel_10 AVD if no device is attached.
 run-android:
+    #!/usr/bin/env sh
+    set -e
+    AVD="Pixel_10"
+    APP_ID="com.abkcompany.myip.androidApp"
+    ADB="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
+    EMULATOR="${ANDROID_HOME:-$HOME/Library/Android/sdk}/emulator/emulator"
+    if [ ! -x "$ADB" ] || [ ! -x "$EMULATOR" ]; then
+        echo "❌ Android SDK not found. Set ANDROID_HOME (currently: ${ANDROID_HOME:-unset})"
+        exit 1
+    fi
+    if [ "$("$ADB" devices | awk 'NR>1 && $2=="device"' | wc -l | tr -d ' ')" = "0" ]; then
+        echo "📱 No device attached — booting AVD: $AVD"
+        "$EMULATOR" -avd "$AVD" -no-snapshot-save >/dev/null 2>&1 &
+        "$ADB" wait-for-device
+        echo "⏳ Waiting for boot to complete..."
+        until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+            sleep 2
+        done
+    fi
     ./gradlew :apps:androidApp:installDebug
-    adb shell am start -n com.abk.myip.android/.MainActivity
+    "$ADB" shell am start -n "$APP_ID/.MainActivity"
+    echo "🚀 Launched: $APP_ID"
 
 # -----------------------------------------------------------------------------
 # Builds and launches the macOS app.

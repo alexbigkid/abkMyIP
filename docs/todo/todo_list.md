@@ -24,7 +24,7 @@
 - [x] `apps/iosApp` — SwiftUI sources + Xcode setup README
 - [x] `apps/macosApp` — SwiftUI sources + Xcode setup README
 - [ ] Generate / commit Xcode project files for iOS and macOS
-- [ ] Verify Android build end-to-end on an emulator
+- [x] Verify Android build end-to-end on an emulator (Pixel 10 / API 36.1, OSMDroid native map, edge-to-edge UI, pull-to-refresh, retry-on-error)
 - [ ] Verify Linux native binary produces correct output against ipapi.co
 - [ ] Verify Web app in browser
 
@@ -41,7 +41,7 @@
 - [ ] Caching layer with a short TTL so opening the app twice in a row is instant
 - [ ] CI pipeline (GitHub Actions matrix: macos-latest for Apple, ubuntu-latest for Linux/JVM/JS, windows-latest for mingw)
 
-## Phase 3: Feature polish (not started)
-- [ ] Pull-to-refresh on mobile UIs
+## Phase 3: Feature polish (in progress)
+- [x] Pull-to-refresh on Android (Material3 `PullToRefreshBox`); iOS still pending
 - [ ] Multiple IP services with fallback (ipapi.co → ipinfo.io → ip-api.com)
-- [ ] Map zoom / pan (would require dropping the static-image approach in favor of MapKit / Google Maps / Leaflet per platform)
+- [x] Map zoom / pan on Android (OSMDroid native MapView replaces the iframe-only shared `StaticMapUrl`); iOS/macOS already use MapKit natively
