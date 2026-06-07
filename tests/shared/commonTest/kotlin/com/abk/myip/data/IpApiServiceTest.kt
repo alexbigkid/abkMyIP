@@ -29,7 +29,8 @@ class IpApiServiceTest {
             "timezone": "America/Los_Angeles",
             "latitude": 37.7749,
             "longitude": -122.4194,
-            "postal": "94103"
+            "postal": "94103",
+            "org": "AS141039 PacketHub S.A."
         }
     """.trimIndent()
 
@@ -65,6 +66,7 @@ class IpApiServiceTest {
         assertEquals(37.7749, dto.latitude)
         assertEquals(-122.4194, dto.longitude)
         assertEquals("94103", dto.postal)
+        assertEquals("AS141039 PacketHub S.A.", dto.org)
     }
 
     @Test

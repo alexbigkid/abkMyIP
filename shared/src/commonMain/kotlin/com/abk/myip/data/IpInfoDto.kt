@@ -14,4 +14,5 @@ data class IpInfoDto(
     val latitude: Double,
     val longitude: Double,
     val postal: String,
+    val org: String? = null,
 )

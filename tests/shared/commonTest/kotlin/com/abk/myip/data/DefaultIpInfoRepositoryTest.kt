@@ -17,6 +17,7 @@ class DefaultIpInfoRepositoryTest {
         latitude = 37.7749,
         longitude = -122.4194,
         postal = "94103",
+        org = "AS141039 PacketHub S.A.",
     )
 
     private fun repoReturning(dto: IpInfoDto): DefaultIpInfoRepository =
@@ -38,6 +39,7 @@ class DefaultIpInfoRepositoryTest {
                 timezone = "America/Los_Angeles",
                 location = com.abk.myip.domain.GeoLocation(37.7749, -122.4194),
                 postal = "94103",
+                org = "AS141039 PacketHub S.A.",
             ),
             info,
         )
@@ -51,6 +53,15 @@ class DefaultIpInfoRepositoryTest {
 
         assertEquals("198.51.100.42", info.ip)
         assertEquals("Reykjavik", info.city)
+    }
+
+    @Test
+    fun `getMyIpInfo passes through a null org`() = runTest {
+        val repo = repoReturning(baselineDto.copy(org = null))
+
+        val info = repo.getMyIpInfo()
+
+        assertEquals(null, info.org)
     }
 
     private class FakeService(private val dto: IpInfoDto) : IpApiService {

@@ -9,4 +9,5 @@ data class IpInfo(
     val timezone: String,
     val location: GeoLocation,
     val postal: String,
+    val org: String? = null,
 )

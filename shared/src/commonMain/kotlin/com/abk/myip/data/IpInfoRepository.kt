@@ -20,4 +20,5 @@ private fun IpInfoDto.toDomain(): IpInfo = IpInfo(
     timezone = timezone,
     location = GeoLocation(latitude = latitude, longitude = longitude),
     postal = postal,
+    org = org,
 )
