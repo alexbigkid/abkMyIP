@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.isSuccess
+import kotlin.coroutines.cancellation.CancellationException
 
 class IpLookupException(message: String) : RuntimeException(message)
 
@@ -13,21 +14,28 @@ interface IpApiService {
     suspend fun fetchIpInfo(): IpInfoDto
 }
 
-private const val IPAPI_ENDPOINT = "https://ipapi.co/json/"
+private const val IPINFO_ENDPOINT = "https://ipinfo.io/json"
 
 fun IpApiService(httpClient: HttpClient): IpApiService = KtorIpApiService(httpClient)
 
 private class KtorIpApiService(private val client: HttpClient) : IpApiService {
     private val logger = Logger.withTag("IpApiService")
 
-    override suspend fun fetchIpInfo(): IpInfoDto {
-        logger.d { "GET $IPAPI_ENDPOINT" }
-        val response: HttpResponse = client.get(IPAPI_ENDPOINT)
+    override suspend fun fetchIpInfo(): IpInfoDto = try {
+        logger.d { "GET $IPINFO_ENDPOINT" }
+        val response: HttpResponse = client.get(IPINFO_ENDPOINT)
         if (!response.status.isSuccess()) {
-            logger.w { "ipapi.co returned ${response.status.value}" }
-            throw IpLookupException("ipapi.co returned status ${response.status.value}")
+            logger.w { "ipinfo.io returned ${response.status.value}" }
+            throw IpLookupException("ipinfo.io returned status ${response.status.value}")
         }
-        logger.d { "ipapi.co OK (${response.status.value})" }
-        return response.body()
+        logger.d { "ipinfo.io OK (${response.status.value})" }
+        response.body()
+    } catch (e: IpLookupException) {
+        throw e
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        logger.e(e) { "Lookup failed" }
+        throw IpLookupException("Lookup failed: ${e.message ?: e::class.simpleName}")
     }
 }

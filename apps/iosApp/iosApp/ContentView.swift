@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 import shared
 
 enum Appearance: String, CaseIterable, Identifiable {
@@ -25,7 +26,6 @@ enum Appearance: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @Binding var appearance: Appearance
     @State private var info: IpInfo? = nil
-    @State private var mapUrl: URL? = nil
     @State private var error: String? = nil
 
     var body: some View {
@@ -48,14 +48,14 @@ struct ContentView: View {
                 if landscape {
                     HStack(spacing: 16) {
                         InfoPanel(info: info)
-                        MapPanel(url: mapUrl)
+                        MapPanel(location: info.location)
                     }
                     .padding(.horizontal, 8)
                 } else {
                     ScrollView {
                         VStack(spacing: 16) {
                             InfoPanel(info: info)
-                            MapPanel(url: mapUrl)
+                            MapPanel(location: info.location)
                                 .frame(height: 280)
                         }
                     }
@@ -87,10 +87,7 @@ struct ContentView: View {
     private func load() async {
         do {
             let app = AbkMyIp()
-            let fetched = try await app.getMyIpInfo.invoke()
-            info = fetched
-            let urlString = app.buildStaticMapUrl.invoke(location: fetched.location).value
-            mapUrl = URL(string: urlString)
+            info = try await app.getMyIpInfo.invoke()
         } catch {
             self.error = "\(error)"
         }
@@ -137,21 +134,23 @@ struct InfoPanel: View {
 }
 
 struct MapPanel: View {
-    let url: URL?
+    let location: GeoLocation
+
+    private var coord: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(
+            latitude: location.latitude,
+            longitude: location.longitude
+        )
+    }
 
     var body: some View {
-        Group {
-            if let url {
-                AsyncImage(url: url) { image in
-                    image.resizable().scaledToFit()
-                } placeholder: {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            } else {
-                Color.clear
-            }
+        Map(initialPosition: .region(MKCoordinateRegion(
+            center: coord,
+            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+        ))) {
+            Marker("My IP", coordinate: coord)
         }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(24)
     }

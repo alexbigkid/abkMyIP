@@ -24,11 +24,9 @@ class IpApiServiceTest {
             "ip": "203.0.113.7",
             "city": "San Francisco",
             "region": "California",
-            "country_name": "United States",
-            "country_code": "US",
+            "country": "US",
+            "loc": "37.7749,-122.4194",
             "timezone": "America/Los_Angeles",
-            "latitude": 37.7749,
-            "longitude": -122.4194,
             "postal": "94103",
             "org": "AS141039 PacketHub S.A."
         }
@@ -60,21 +58,34 @@ class IpApiServiceTest {
         assertEquals("203.0.113.7", dto.ip)
         assertEquals("San Francisco", dto.city)
         assertEquals("California", dto.region)
-        assertEquals("United States", dto.country)
-        assertEquals("US", dto.countryCode)
+        assertEquals("US", dto.country)
+        assertEquals("37.7749,-122.4194", dto.loc)
         assertEquals("America/Los_Angeles", dto.timezone)
-        assertEquals(37.7749, dto.latitude)
-        assertEquals(-122.4194, dto.longitude)
         assertEquals("94103", dto.postal)
         assertEquals("AS141039 PacketHub S.A.", dto.org)
     }
 
     @Test
-    fun `fetchIpInfo throws on non-success http status`() = runTest {
+    fun `fetchIpInfo throws IpLookupException on non-success http status`() = runTest {
         val svc = service {
             respond(
                 content = ByteReadChannel(""),
                 status = HttpStatusCode.ServiceUnavailable,
+                headers = headersOf("Content-Type", "application/json"),
+            )
+        }
+
+        assertFailsWith<IpLookupException> {
+            svc.fetchIpInfo()
+        }
+    }
+
+    @Test
+    fun `fetchIpInfo wraps malformed payload as IpLookupException`() = runTest {
+        val svc = service {
+            respond(
+                content = ByteReadChannel("""{"reason": "RateLimited", "error": true}"""),
+                status = HttpStatusCode.OK,
                 headers = headersOf("Content-Type", "application/json"),
             )
         }
@@ -98,6 +109,6 @@ class IpApiServiceTest {
 
         svc.fetchIpInfo()
 
-        assertEquals("https://ipapi.co/json/", capturedUrl)
+        assertEquals("https://ipinfo.io/json", capturedUrl)
     }
 }

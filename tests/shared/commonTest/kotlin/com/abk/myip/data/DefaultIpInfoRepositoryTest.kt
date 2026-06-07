@@ -11,11 +11,9 @@ class DefaultIpInfoRepositoryTest {
         ip = "203.0.113.7",
         city = "San Francisco",
         region = "California",
-        country = "United States",
-        countryCode = "US",
+        country = "US",
+        loc = "37.7749,-122.4194",
         timezone = "America/Los_Angeles",
-        latitude = 37.7749,
-        longitude = -122.4194,
         postal = "94103",
         org = "AS141039 PacketHub S.A.",
     )
@@ -34,7 +32,7 @@ class DefaultIpInfoRepositoryTest {
                 ip = "203.0.113.7",
                 city = "San Francisco",
                 region = "California",
-                country = "United States",
+                country = "US",
                 countryCode = "US",
                 timezone = "America/Los_Angeles",
                 location = com.abk.myip.domain.GeoLocation(37.7749, -122.4194),
@@ -56,12 +54,31 @@ class DefaultIpInfoRepositoryTest {
     }
 
     @Test
+    fun `getMyIpInfo parses loc into latitude and longitude`() = runTest {
+        val repo = repoReturning(baselineDto.copy(loc = "6.2450,-75.5715"))
+
+        val info = repo.getMyIpInfo()
+
+        assertEquals(6.2450, info.location.latitude)
+        assertEquals(-75.5715, info.location.longitude)
+    }
+
+    @Test
     fun `getMyIpInfo passes through a null org`() = runTest {
         val repo = repoReturning(baselineDto.copy(org = null))
 
         val info = repo.getMyIpInfo()
 
         assertEquals(null, info.org)
+    }
+
+    @Test
+    fun `getMyIpInfo treats missing postal as empty string`() = runTest {
+        val repo = repoReturning(baselineDto.copy(postal = null))
+
+        val info = repo.getMyIpInfo()
+
+        assertEquals("", info.postal)
     }
 
     private class FakeService(private val dto: IpInfoDto) : IpApiService {
