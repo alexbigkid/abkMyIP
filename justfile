@@ -105,10 +105,28 @@ build-android-release:
     @echo "✅ APK: apps/androidApp/build/outputs/apk/release/"
 
 # -----------------------------------------------------------------------------
-# Links the Linux native CLI binary (linuxX64).
+# Builds the Linux CLI. Native build on Linux hosts, Docker build on macOS/Windows.
 build-linux:
-    ./gradlew :apps:linuxApp:linkReleaseExecutableLinuxX64
-    @echo "✅ Linux binary: apps/linuxApp/build/bin/linuxX64/releaseExecutable/linuxApp.kexe"
+    #!/usr/bin/env sh
+    set -e
+    OS=$(uname -s)
+    if [ "$OS" = "Linux" ]; then
+        case "$(uname -m)" in
+            x86_64)        TASK=LinuxX64;   DIR=linuxX64   ;;
+            aarch64|arm64) TASK=LinuxArm64; DIR=linuxArm64 ;;
+            *) echo "❌ Unsupported Linux arch: $(uname -m)"; exit 1 ;;
+        esac
+        ./gradlew ":apps:linuxApp:linkReleaseExecutable${TASK}"
+        echo "✅ Linux binary: apps/linuxApp/build/bin/${DIR}/releaseExecutable/linuxApp.kexe"
+    else
+        if ! command -v docker >/dev/null 2>&1; then
+            echo "❌ Docker not found. Install Docker to build the Linux binary on $OS."
+            exit 1
+        fi
+        echo "🐳 Building Linux binary in Docker (host: $OS, target: linux/amd64) — may take several minutes on first run"
+        docker build --platform=linux/amd64 -f apps/linuxApp/Dockerfile -t abkmyip-linux:latest .
+        echo "✅ Docker image: abkmyip-linux:latest"
+    fi
 
 # -----------------------------------------------------------------------------
 # Links the Windows native CLI binary (mingwX64, cross-compiles on macOS/Linux).
@@ -218,9 +236,20 @@ compile-all: compile-android compile-linux compile-windows compile-js compile-io
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Runs the Linux CLI binary, building it first.
+# Runs the Linux CLI binary, building it first. Native on Linux, `docker run` on macOS/Windows.
 run-linux *args: build-linux
-    ./apps/linuxApp/build/bin/linuxX64/releaseExecutable/linuxApp.kexe {{args}}
+    #!/usr/bin/env sh
+    set -e
+    OS=$(uname -s)
+    if [ "$OS" = "Linux" ]; then
+        case "$(uname -m)" in
+            x86_64)        DIR=linuxX64   ;;
+            aarch64|arm64) DIR=linuxArm64 ;;
+        esac
+        ./apps/linuxApp/build/bin/${DIR}/releaseExecutable/linuxApp.kexe {{args}}
+    else
+        docker run --rm --platform=linux/amd64 abkmyip-linux:latest {{args}}
+    fi
 
 # -----------------------------------------------------------------------------
 # Runs the web app dev server with hot reload at http://localhost:8080.
