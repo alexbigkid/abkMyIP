@@ -41,6 +41,7 @@ help:
     @echo ""
     @echo "Run apps:"
     @echo "  run-linux [args]                Run the Linux CLI (builds first)"
+    @echo "  run-windows [args]              Run the Windows CLI (build always; exec only on Windows hosts)"
     @echo "  run-web                         Run web dev server with auto-reload"
     @echo "  run-android                     Install + launch Android app on device/emulator"
     @echo "  run-macos                       Build + launch the macOS app"
@@ -250,6 +251,25 @@ run-linux *args: build-linux
     else
         docker run --rm --platform=linux/amd64 abkmyip-linux:latest {{args}}
     fi
+
+# -----------------------------------------------------------------------------
+# Runs the Windows CLI binary, building it first. Native exec on Windows; informational stub on macOS/Linux (no Wine; verify via CI instead).
+run-windows *args: build-windows
+    #!/usr/bin/env sh
+    set -e
+    OS=$(uname -s)
+    EXE="apps/windowsApp/build/bin/mingwX64/releaseExecutable/windowsApp.exe"
+    case "$OS" in
+        MINGW*|MSYS*|CYGWIN*|Windows_NT)
+            "./${EXE}" {{args}}
+            ;;
+        *)
+            echo "ℹ️  Built: ${EXE}"
+            echo "ℹ️  Windows .exe cannot run on ${OS}. Options:"
+            echo "    • Copy to a Windows machine and run there"
+            echo "    • Push to GitHub — the windows-build workflow smoke-tests the .exe on windows-latest"
+            ;;
+    esac
 
 # -----------------------------------------------------------------------------
 # Runs the web app dev server with hot reload at http://localhost:8080.
