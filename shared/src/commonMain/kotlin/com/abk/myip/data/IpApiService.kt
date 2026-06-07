@@ -1,10 +1,13 @@
 package com.abk.myip.data
 
 import co.touchlab.kermit.Logger
+import com.abk.myip.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -23,7 +26,11 @@ private class KtorIpApiService(private val client: HttpClient) : IpApiService {
 
     override suspend fun fetchIpInfo(): IpInfoDto = try {
         logger.d { "GET $IPINFO_ENDPOINT" }
-        val response: HttpResponse = client.get(IPINFO_ENDPOINT)
+        val response: HttpResponse = client.get(IPINFO_ENDPOINT) {
+            if (BuildConfig.IPINFO_TOKEN.isNotBlank()) {
+                header(HttpHeaders.Authorization, "Bearer ${BuildConfig.IPINFO_TOKEN}")
+            }
+        }
         if (!response.status.isSuccess()) {
             logger.w { "ipinfo.io returned ${response.status.value}" }
             throw IpLookupException("ipinfo.io returned status ${response.status.value}")

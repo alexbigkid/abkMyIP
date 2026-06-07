@@ -61,3 +61,5 @@ Thumbs.db
 ._*
 .AppleDouble
 .LSOverride
+.env
+.envrc

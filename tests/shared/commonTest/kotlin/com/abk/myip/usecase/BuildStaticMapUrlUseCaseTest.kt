@@ -2,7 +2,6 @@ package com.abk.myip.usecase
 
 import com.abk.myip.domain.GeoLocation
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class BuildStaticMapUrlUseCaseTest {
@@ -11,32 +10,32 @@ class BuildStaticMapUrlUseCaseTest {
     private val sf = GeoLocation(37.7749, -122.4194)
 
     @Test
-    fun `produces an OpenStreetMap static map url`() {
+    fun `produces an OpenStreetMap embed url`() {
         val url = useCase(sf).value
 
-        assertTrue(url.startsWith("https://staticmap.openstreetmap.de/staticmap.php"))
-    }
-
-    @Test
-    fun `url contains the requested coordinates as center`() {
-        val url = useCase(sf).value
-
-        assertTrue(url.contains("center=37.7749,-122.4194"), "url was: $url")
+        assertTrue(url.startsWith("https://www.openstreetmap.org/export/embed.html"), "url was: $url")
     }
 
     @Test
     fun `url contains the requested coordinates as a marker`() {
         val url = useCase(sf).value
 
-        assertTrue(url.contains("markers=37.7749,-122.4194"), "url was: $url")
+        assertTrue(url.contains("marker=37.7749,-122.4194"), "url was: $url")
     }
 
     @Test
-    fun `url uses the default zoom and size`() {
+    fun `url uses the mapnik tile layer`() {
         val url = useCase(sf).value
 
-        assertTrue(url.contains("zoom=12"), "url was: $url")
-        assertTrue(url.contains("size=600x400"), "url was: $url")
+        assertTrue(url.contains("layer=mapnik"), "url was: $url")
+    }
+
+    @Test
+    fun `url bbox surrounds the marker by the default span`() {
+        val url = useCase(sf).value
+
+        // SF (37.7749, -122.4194) with default span 0.05 → bbox = west,south,east,north
+        assertTrue(url.contains("bbox=-122.4694,37.7249,-122.3694,37.8249"), "url was: $url")
     }
 
     @Test
@@ -44,6 +43,6 @@ class BuildStaticMapUrlUseCaseTest {
         val antarctica = GeoLocation(-77.85, 166.6667)
         val url = useCase(antarctica).value
 
-        assertEquals(true, url.contains("center=-77.85,166.6667"), "url was: $url")
+        assertTrue(url.contains("marker=-77.85,166.6667"), "url was: $url")
     }
 }

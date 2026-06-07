@@ -7,10 +7,31 @@ plugins {
 val appVersion = libs.versions.app.get()
 val generatedConfigDir = layout.buildDirectory.dir("generated/source/buildConfig/commonMain/kotlin")
 
+fun loadIpinfoToken(): String {
+    providers.environmentVariable("IPINFO_TOKEN").orNull?.takeIf { it.isNotBlank() }?.let { return it }
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        envFile.readLines().forEach { raw ->
+            val line = raw.trim()
+            if (line.startsWith("#") || !line.startsWith("IPINFO_TOKEN=")) return@forEach
+            val value = line.substringAfter("=").trim()
+                .removeSurrounding("\"")
+                .removeSurrounding("'")
+            if (value.isNotBlank()) return value
+        }
+    }
+    return ""
+}
+
+val ipinfoToken = loadIpinfoToken()
+logger.lifecycle("ipinfo token: ${if (ipinfoToken.isBlank()) "absent (rate-limited free tier)" else "present"}")
+
 val generateBuildConfig = tasks.register("generateBuildConfig") {
     val outFile = generatedConfigDir.get().file("com/abk/myip/BuildConfig.kt").asFile
     val versionString = appVersion
+    val tokenString = ipinfoToken
     inputs.property("version", versionString)
+    inputs.property("ipinfoToken", tokenString)
     outputs.file(outFile)
     doLast {
         outFile.parentFile.mkdirs()
@@ -20,6 +41,7 @@ val generateBuildConfig = tasks.register("generateBuildConfig") {
             |
             |object BuildConfig {
             |    const val APP_VERSION = "$versionString"
+            |    const val IPINFO_TOKEN = "$tokenString"
             |}
             |
             """.trimMargin()

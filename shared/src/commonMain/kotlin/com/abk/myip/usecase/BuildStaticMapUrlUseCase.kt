@@ -2,34 +2,36 @@ package com.abk.myip.usecase
 
 import com.abk.myip.domain.GeoLocation
 import com.abk.myip.domain.StaticMapUrl
+import kotlin.math.round
 
 class BuildStaticMapUrlUseCase(
-    private val zoom: Int = DEFAULT_ZOOM,
-    private val widthPx: Int = DEFAULT_WIDTH,
-    private val heightPx: Int = DEFAULT_HEIGHT,
+    private val span: Double = DEFAULT_SPAN,
 ) {
     operator fun invoke(location: GeoLocation): StaticMapUrl {
-        val lat = location.latitude.toPlainString()
-        val lon = location.longitude.toPlainString()
+        val lat = location.latitude
+        val lon = location.longitude
         val url = buildString {
-            append(STATIC_MAP_BASE_URL)
-            append("?center=").append(lat).append(',').append(lon)
-            append("&zoom=").append(zoom)
-            append("&size=").append(widthPx).append('x').append(heightPx)
-            append("&markers=").append(lat).append(',').append(lon).append(",red")
+            append(OSM_EMBED_BASE_URL)
+            append("?bbox=")
+            append((lon - span).toPlainString()).append(',')
+            append((lat - span).toPlainString()).append(',')
+            append((lon + span).toPlainString()).append(',')
+            append((lat + span).toPlainString())
+            append("&layer=mapnik")
+            append("&marker=").append(lat.toPlainString()).append(',').append(lon.toPlainString())
         }
         return StaticMapUrl(url)
     }
 
     private fun Double.toPlainString(): String {
-        val asLong = toLong()
-        return if (asLong.toDouble() == this) asLong.toString() else toString()
+        val rounded = round(this * COORD_PRECISION) / COORD_PRECISION
+        val asLong = rounded.toLong()
+        return if (asLong.toDouble() == rounded) asLong.toString() else rounded.toString()
     }
 
     private companion object {
-        const val STATIC_MAP_BASE_URL = "https://staticmap.openstreetmap.de/staticmap.php"
-        const val DEFAULT_ZOOM = 12
-        const val DEFAULT_WIDTH = 600
-        const val DEFAULT_HEIGHT = 400
+        const val OSM_EMBED_BASE_URL = "https://www.openstreetmap.org/export/embed.html"
+        const val DEFAULT_SPAN = 0.05
+        const val COORD_PRECISION = 10000.0
     }
 }
