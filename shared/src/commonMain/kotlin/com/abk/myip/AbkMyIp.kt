@@ -1,5 +1,7 @@
 package com.abk.myip
 
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
 import com.abk.myip.data.DefaultIpInfoRepository
 import com.abk.myip.data.IpApiService
 import com.abk.myip.platform.httpClient
@@ -8,6 +10,10 @@ import com.abk.myip.usecase.GetMyIpInfoUseCase
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+
+fun silenceDebugLogs() {
+    Logger.setMinSeverity(Severity.Warn)
+}
 
 class AbkMyIp {
     private val client = httpClient {

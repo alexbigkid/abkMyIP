@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-smoke-test:
     runs-on: windows-latest
+    env:
+      IPINFO_TOKEN: ${{ secrets.IPINFO_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -43,8 +45,12 @@ jobs:
 
       - name: Smoke test — --json (live ipinfo.io call)
         run: |
-          $out = & .\apps\windowsApp\build\bin\mingwX64\releaseExecutable\windowsApp.exe --json
+          $exe = ".\apps\windowsApp\build\bin\mingwX64\releaseExecutable\windowsApp.exe"
+          $out = & $exe --json 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Host "exit=$code"
           Write-Host $out
+          if ($code -ne 0) { throw "binary exited $code: $out" }
           if ($out -notmatch '"ip":"') { throw "--json output missing ip field: $out" }
         shell: pwsh
 

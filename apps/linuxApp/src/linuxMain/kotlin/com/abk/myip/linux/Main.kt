@@ -3,6 +3,7 @@ package com.abk.myip.linux
 import com.abk.myip.AbkMyIp
 import com.abk.myip.BuildConfig
 import com.abk.myip.domain.IpInfo
+import com.abk.myip.silenceDebugLogs
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.runBlocking
 import platform.posix.fputs
@@ -21,6 +22,7 @@ Options:
 """
 
 fun main(args: Array<String>) {
+    silenceDebugLogs()
     when {
         "--help" in args || "-h" in args -> {
             println(USAGE.trimEnd())
