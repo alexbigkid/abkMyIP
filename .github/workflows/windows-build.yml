@@ -50,7 +50,7 @@ jobs:
           $code = $LASTEXITCODE
           Write-Host "exit=$code"
           Write-Host $out
-          if ($code -ne 0) { throw "binary exited $code: $out" }
+          if ($code -ne 0) { throw "binary exited ${code}: $out" }
           if ($out -notmatch '"ip":"') { throw "--json output missing ip field: $out" }
         shell: pwsh
 
