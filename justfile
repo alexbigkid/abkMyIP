@@ -78,9 +78,11 @@ help:
     @echo "  clean                           Delete all build outputs"
     @echo "  refresh                         Re-resolve dependencies from remote (ignore cache)"
     @echo ""
-    @echo "Code style:"
+    @echo "Code style & analysis:"
     @echo "  format                          Auto-format Kotlin (requires ktlint)"
     @echo "  lint                            Lint Kotlin (requires ktlint)"
+    @echo "  coverage                        Run JVM tests + generate Kover HTML coverage (shared module)"
+    @echo "  dead-code                       Run Detekt across all modules (unused code, complexity, style)"
     @echo ""
     @echo "Usage: just <recipe> [args...]"
 
@@ -544,6 +546,31 @@ lint:
         exit 1
     fi
     ktlint "shared/**/*.kt" "apps/**/*.kt" "tests/**/*.kt"
+
+# =============================================================================
+# Coverage & static analysis
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Runs JVM tests and prints a Kover coverage summary (line, branch, method, class, instruction) directly to the terminal.
+coverage:
+    #!/usr/bin/env sh
+    set -e
+    ./gradlew :shared:koverXmlReport --quiet --console=plain
+    xml=shared/build/reports/kover/report.xml
+    echo ""
+    echo "📊 Shared module coverage (JVM tests)"
+    xmllint --xpath '/report/counter' "$xml" 2>/dev/null \
+      | grep -oE '<counter type="[A-Z]+" missed="[0-9]+" covered="[0-9]+"/>' \
+      | awk -F'"' '{
+          type=$2; missed=$4; covered=$6; total=missed+covered
+          if (total>0) printf "  %-12s %5.1f%%  (%d/%d)\n", tolower(type), 100*covered/total, covered, total
+        }'
+
+# -----------------------------------------------------------------------------
+# Runs Detekt across all modules — findings print directly to the terminal with file:line:col references.
+dead-code:
+    ./gradlew detekt --console=plain
 
 # -----------------------------------------------------------------------------
 # Quick test that just is installed and working.

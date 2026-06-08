@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -33,6 +34,7 @@ class IpApiServiceTest {
     """.trimIndent()
 
     private fun service(
+        token: String = "",
         responder: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ): IpApiService {
         val client = HttpClient(MockEngine(responder)) {
@@ -40,7 +42,7 @@ class IpApiServiceTest {
                 json(Json { ignoreUnknownKeys = true })
             }
         }
-        return IpApiService(client)
+        return IpApiService(client, token)
     }
 
     @Test
@@ -110,5 +112,63 @@ class IpApiServiceTest {
         svc.fetchIpInfo()
 
         assertEquals("https://ipinfo.io/json", capturedUrl)
+    }
+
+    @Test
+    fun `fetchIpInfo sends Authorization header when token is non-blank`() = runTest {
+        var capturedAuth: String? = null
+        val svc = service(token = "secret-abc") { request ->
+            capturedAuth = request.headers["Authorization"]
+            respond(
+                content = ByteReadChannel(sampleJson),
+                status = HttpStatusCode.OK,
+                headers = headersOf("Content-Type", "application/json"),
+            )
+        }
+
+        svc.fetchIpInfo()
+
+        assertEquals("Bearer secret-abc", capturedAuth)
+    }
+
+    @Test
+    fun `fetchIpInfo omits Authorization header when token is blank`() = runTest {
+        var capturedAuth: String? = "<not-checked>"
+        val svc = service(token = "") { request ->
+            capturedAuth = request.headers["Authorization"]
+            respond(
+                content = ByteReadChannel(sampleJson),
+                status = HttpStatusCode.OK,
+                headers = headersOf("Content-Type", "application/json"),
+            )
+        }
+
+        svc.fetchIpInfo()
+
+        assertEquals(null, capturedAuth)
+    }
+
+    @Test
+    fun `fetchIpInfo re-throws IpLookupException without wrapping it again`() = runTest {
+        val svc = service { throw IpLookupException("from engine") }
+
+        val ex = assertFailsWith<IpLookupException> { svc.fetchIpInfo() }
+        assertEquals("from engine", ex.message, "outer Throwable catch must not re-wrap an IpLookupException")
+    }
+
+    @Test
+    fun `fetchIpInfo propagates CancellationException without wrapping it`() = runTest {
+        val svc = service { throw CancellationException("cancelled mid-flight") }
+
+        val ex = assertFailsWith<CancellationException> { svc.fetchIpInfo() }
+        assertEquals("cancelled mid-flight", ex.message, "cancellation must propagate, not be swallowed as IpLookupException")
+    }
+
+    @Test
+    fun `fetchIpInfo falls back to class simple name when wrapped exception has no message`() = runTest {
+        val svc = service { throw RuntimeException(null as String?) }
+
+        val ex = assertFailsWith<IpLookupException> { svc.fetchIpInfo() }
+        assertEquals("Lookup failed: RuntimeException", ex.message)
     }
 }

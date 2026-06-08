@@ -38,7 +38,7 @@ jobs:
         run: |
           $out = & .\apps\windowsApp\build\bin\mingwX64\releaseExecutable\windowsApp.exe --help
           Write-Host $out
-          if ($out -notmatch '--json') { throw "--help did not mention --json: $out" }
+          if (-not ($out -match '--json')) { throw "--help did not mention --json: $out" }
         shell: pwsh
 
       - name: Smoke test — --json (live ipinfo.io call)

@@ -1,0 +1,32 @@
+naming:
+  FunctionNaming:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/tests/**'
+      - '**/*Test.kt'
+    ignoreAnnotated:
+      - 'Composable'
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/tests/**'
+      - '**/*Test.kt'
+  ReturnCount:
+    excludes:
+      - '**/test/**'
+      - '**/tests/**'
+      - '**/*Test.kt'
+
+complexity:
+  LongMethod:
+    excludes:
+      - '**/test/**'
+      - '**/tests/**'
+      - '**/*Test.kt'

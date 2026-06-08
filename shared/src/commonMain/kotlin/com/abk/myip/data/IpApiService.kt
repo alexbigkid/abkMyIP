@@ -19,16 +19,22 @@ interface IpApiService {
 
 private const val IPINFO_ENDPOINT = "https://ipinfo.io/json"
 
-fun IpApiService(httpClient: HttpClient): IpApiService = KtorIpApiService(httpClient)
+fun IpApiService(
+    httpClient: HttpClient,
+    token: String = BuildConfig.IPINFO_TOKEN,
+): IpApiService = KtorIpApiService(httpClient, token)
 
-private class KtorIpApiService(private val client: HttpClient) : IpApiService {
+private class KtorIpApiService(
+    private val client: HttpClient,
+    private val token: String,
+) : IpApiService {
     private val logger = Logger.withTag("IpApiService")
 
     override suspend fun fetchIpInfo(): IpInfoDto = try {
         logger.d { "GET $IPINFO_ENDPOINT" }
         val response: HttpResponse = client.get(IPINFO_ENDPOINT) {
-            if (BuildConfig.IPINFO_TOKEN.isNotBlank()) {
-                header(HttpHeaders.Authorization, "Bearer ${BuildConfig.IPINFO_TOKEN}")
+            if (token.isNotBlank()) {
+                header(HttpHeaders.Authorization, "Bearer $token")
             }
         }
         if (!response.status.isSuccess()) {

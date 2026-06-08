@@ -4,6 +4,7 @@ import com.abk.myip.domain.IpInfo
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class DefaultIpInfoRepositoryTest {
 
@@ -79,6 +80,20 @@ class DefaultIpInfoRepositoryTest {
         val info = repo.getMyIpInfo()
 
         assertEquals("", info.postal)
+    }
+
+    @Test
+    fun `getMyIpInfo rejects loc that does not split into two parts`() = runTest {
+        val repo = repoReturning(baselineDto.copy(loc = "only-one-piece"))
+
+        assertFailsWith<IllegalArgumentException> { repo.getMyIpInfo() }
+    }
+
+    @Test
+    fun `getMyIpInfo rejects loc with non-numeric components`() = runTest {
+        val repo = repoReturning(baselineDto.copy(loc = "north,south"))
+
+        assertFailsWith<NumberFormatException> { repo.getMyIpInfo() }
     }
 
     private class FakeService(private val dto: IpInfoDto) : IpApiService {

@@ -45,4 +45,12 @@ class BuildStaticMapUrlUseCaseTest {
 
         assertTrue(url.contains("marker=-77.85,166.6667"), "url was: $url")
     }
+
+    @Test
+    fun `whole-number coordinates render without a trailing decimal`() {
+        val nullIsland = GeoLocation(0.0, 0.0)
+        val url = useCase(nullIsland).value
+
+        assertTrue(url.contains("marker=0,0"), "url was: $url")
+    }
 }
